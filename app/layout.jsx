@@ -1,8 +1,9 @@
+// app/layout.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
-import Sidebar from "./components/Sidebar"; // Path check: app/components/Sidebar.jsx
+import Sidebar from "./components/Sidebar";
 
 export default function RootLayout({ children }) {
   const [session, setSession] = useState(null);
@@ -16,23 +17,23 @@ export default function RootLayout({ children }) {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
-      setLoading(false);
 
-      // Agar session nahi hai aur user login page par nahi hai, to login par bhejo
+      // Agar session nahi hai aur login par nahi hai, to redirect karo
       if (!session && pathname !== "/login") {
-        router.push("/login");
+        router.replace("/login");
+      } else {
+        setLoading(false); // Sirf tab loading khatam karo jab decide ho jaye kahan jana hai
       }
     };
 
     checkSession();
 
-    // Live session listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session && pathname !== "/login") {
-        router.push("/login");
+        router.replace("/login");
       }
     });
 
@@ -48,7 +49,6 @@ export default function RootLayout({ children }) {
           <div style={loaderStyle}>Verifying Finance Orbit Session...</div>
         ) : (
           <div style={{ display: "flex" }}>
-            {/* Sidebar sirf login ke baad dikhega */}
             {session && !isLoginPage && <Sidebar />}
 
             <main
@@ -58,7 +58,8 @@ export default function RootLayout({ children }) {
                 minHeight: "100vh",
               }}
             >
-              {children}
+              {/* Sabse important change: Agar user logged in nahi hai to page dikhao hi mat */}
+              {!session && !isLoginPage ? null : children}
             </main>
           </div>
         )}
