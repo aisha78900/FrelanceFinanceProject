@@ -10,7 +10,8 @@ export default function HomePage() {
             Welcome to <span style={gradientText}>Finance Orbit</span>
           </h1>
           <p style={heroSubtitle}>
-            Your comprehensive dashboard for managing clients, tracking revenue, and generating financial reports.
+            Your comprehensive dashboard for managing clients, tracking revenue,
+            and generating financial reports.
           </p>
           <div style={buttonGroup}>
             <Link href="/dashboard" style={primaryButton}>
@@ -21,57 +22,66 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-        
+
         <div style={featuresGrid}>
-          <div 
+          <div
             style={featureCard}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-8px)";
-              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
+              e.currentTarget.style.boxShadow =
+                "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
+              e.currentTarget.style.boxShadow =
+                "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
             }}
           >
             <div style={featureIcon}>📊</div>
             <h3 style={featureTitle}>Dashboard Overview</h3>
             <p style={featureDescription}>
-              Get real-time insights into your business performance with comprehensive metrics and analytics.
+              Get real-time insights into your business performance with
+              comprehensive metrics and analytics.
             </p>
           </div>
-          <div 
+          <div
             style={featureCard}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-8px)";
-              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
+              e.currentTarget.style.boxShadow =
+                "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
+              e.currentTarget.style.boxShadow =
+                "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
             }}
           >
             <div style={featureIcon}>👥</div>
             <h3 style={featureTitle}>Client Management</h3>
             <p style={featureDescription}>
-              Easily track and manage all your client projects, transactions, and revenue streams.
+              Easily track and manage all your client projects, transactions,
+              and revenue streams.
             </p>
           </div>
-          <div 
+          <div
             style={featureCard}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-8px)";
-              e.currentTarget.style.boxShadow = "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
+              e.currentTarget.style.boxShadow =
+                "0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
+              e.currentTarget.style.boxShadow =
+                "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)";
             }}
           >
             <div style={featureIcon}>📈</div>
             <h3 style={featureTitle}>Monthly Reports</h3>
             <p style={featureDescription}>
-              Generate detailed monthly financial reports with profit calculations and Sadqa fund tracking.
+              Generate detailed monthly financial reports with profit
+              calculations and Sadqa fund tracking.
             </p>
           </div>
         </div>
