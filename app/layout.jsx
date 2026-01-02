@@ -1,158 +1,78 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useRouter, usePathname } from "next/navigation";
+import Sidebar from "./components/Sidebar"; // Path check: app/components/Sidebar.jsx
 
-export default function AuthPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function RootLayout({ children }) {
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // 🔄 Ye state decide karegi ke Login dikhana hai ya Signup
-  const [isSignUp, setIsSignUp] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) {
-        router.replace("/dashboard");
-      } else {
-        setLoading(false);
+      setSession(session);
+      setLoading(false);
+
+      // Agar session nahi hai aur user login page par nahi hai, to login par bhejo
+      if (!session && pathname !== "/login") {
+        router.push("/login");
       }
     };
+
     checkSession();
-  }, [router]);
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isSignUp) {
-        // 🆕 SIGNUP LOGIC
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert("Check your email for confirmation link!");
-      } else {
-        // 🔑 LOGIN LOGIC
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        router.replace("/dashboard");
+    // Live session listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session && pathname !== "/login") {
+        router.push("/login");
       }
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
-  if (loading) return <div style={loader}>Processing...</div>;
+    return () => subscription.unsubscribe();
+  }, [pathname, router]);
+
+  const isLoginPage = pathname === "/login";
 
   return (
-    <div style={container}>
-      <form onSubmit={handleAuth} style={card}>
-        <h2 style={{ textAlign: "center", color: "#0f172a" }}>
-          {isSignUp ? "Create Account" : "Login"}
-        </h2>
+    <html lang="en">
+      <body style={{ margin: 0, padding: 0, background: "#f8fafc" }}>
+        {loading ? (
+          <div style={loaderStyle}>Verifying Finance Orbit Session...</div>
+        ) : (
+          <div style={{ display: "flex" }}>
+            {/* Sidebar sirf login ke baad dikhega */}
+            {session && !isLoginPage && <Sidebar />}
 
-        <p
-          style={{
-            textAlign: "center",
-            color: "#64748b",
-            fontSize: "14px",
-            marginBottom: "10px",
-          }}
-        >
-          {isSignUp
-            ? "Join Finance Orbit today"
-            : "Welcome back to Finance Orbit"}
-        </p>
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={input}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={input}
-        />
-
-        <button style={btn}>{isSignUp ? "Sign Up" : "Login"}</button>
-
-        {/* 🔀 TOGGLE LINK */}
-        <p style={{ textAlign: "center", fontSize: "14px", marginTop: "15px" }}>
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}
-          <span
-            onClick={() => setIsSignUp(!isSignUp)}
-            style={{
-              color: "#0ea5e9",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginLeft: "5px",
-            }}
-          >
-            {isSignUp ? "Login" : "Create one"}
-          </span>
-        </p>
-      </form>
-    </div>
+            <main
+              style={{
+                flex: 1,
+                marginLeft: session && !isLoginPage ? "240px" : "0px",
+                minHeight: "100vh",
+              }}
+            >
+              {children}
+            </main>
+          </div>
+        )}
+      </body>
+    </html>
   );
 }
 
-/* Styles (Aapke mojooda styles use kiye hain) */
-const loader = {
-  height: "100vh",
+const loaderStyle = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  fontWeight: "bold",
+  height: "100vh",
+  fontFamily: "Inter, sans-serif",
   color: "#0ea5e9",
-};
-const container = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  height: "100vh",
-  background: "#f1f5f9",
-};
-const card = {
-  background: "#fff",
-  padding: "40px",
-  borderRadius: "16px",
-  width: "350px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-  boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
-};
-const input = {
-  padding: "12px",
-  borderRadius: "8px",
-  border: "1px solid #e2e8f0",
-  outline: "none",
-};
-const btn = {
-  padding: "12px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#0ea5e9",
-  color: "#fff",
   fontWeight: "bold",
-  cursor: "pointer",
-  transition: "0.3s",
 };
