@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
-import Sidebar from "./components/Sidebar"; // Path check: app/components/Sidebar.jsx
+import Sidebar from "./components/Sidebar";
 
 export default function RootLayout({ children }) {
   const [session, setSession] = useState(null);
@@ -15,24 +15,32 @@ export default function RootLayout({ children }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
+      setSession(session); // Agar session nahi hai aur user login page par nahi hai, to login par bhejo
 
-      // Agar session nahi hai aur user login page par nahi hai, to login par bhejo
       if (!session && pathname !== "/login") {
-        router.push("/login");
+        router.replace("/login");
+      }
+      // 💡 NAYA SUDHAAR: Agar session hai aur user /login par hai, toh home page par bhejo
+      else if (session && pathname === "/login") {
+        router.replace("/"); // '/' aapka main page hai (HomePage.jsx)
+      } else {
+        setLoading(false);
       }
     };
 
     checkSession();
 
-    // Live session listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      // Session nahi hai aur login par nahi hai, toh login par bhej do
       if (!session && pathname !== "/login") {
-        router.push("/login");
+        router.replace("/login");
+      }
+      // 💡 NAYA SUDHAAR: Session hai aur login par hai, toh home page par bhej do
+      else if (session && pathname === "/login") {
+        router.replace("/");
       }
     });
 
@@ -43,14 +51,14 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
+           {" "}
       <body style={{ margin: 0, padding: 0, background: "#f8fafc" }}>
+               {" "}
         {loading ? (
           <div style={loaderStyle}>Verifying Finance Orbit Session...</div>
         ) : (
           <div style={{ display: "flex" }}>
-            {/* Sidebar sirf login ke baad dikhega */}
-            {session && !isLoginPage && <Sidebar />}
-
+                        {session && !isLoginPage && <Sidebar />}           {" "}
             <main
               style={{
                 flex: 1,
@@ -58,11 +66,16 @@ export default function RootLayout({ children }) {
                 minHeight: "100vh",
               }}
             >
-              {children}
+                            {/* Yeh line theek hai, is mein koi change nahi */} 
+                          {!session && !isLoginPage ? null : children}         
+               {" "}
             </main>
+                     {" "}
           </div>
         )}
+             {" "}
       </body>
+         {" "}
     </html>
   );
 }
