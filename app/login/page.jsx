@@ -1,110 +1,95 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function AuthPage() {
+export default function Login() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // ⬅️ IMPORTANT
 
-  // --- Auth Logic (Login/Signup) ---
-  const handleAuth = async (e) => {
+  // 🔐 SESSION CHECK (before render)
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        router.replace("/dashboard"); // no history, no flicker
+      } else {
+        setLoading(false); // show login only if not logged in
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert("Signup successful! Please check your email for confirmation.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        window.location.href = "http://localhost:3001/";
-      }
-    } catch (error) {
-      alert(error.message);
-    } finally {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      router.replace("/dashboard"); // ⬅️ no flash
+    } catch (err) {
+      alert(err.message);
       setLoading(false);
     }
   };
 
-  // --- 1. Forgot Password Logic ---
-  const handleForgotPassword = async () => {
-    if (!email) {
-      alert("Please enter your email address first in the input field.");
-      return;
-    }
-
-    const confirmReset = confirm(`Send password reset link to: ${email}?`);
-    if (!confirmReset) return;
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Bhai, redirect URL wohi dena jahan aapka naya reset page hoga
-        redirectTo: "http://localhost:3000/reset-password",
-      });
-
-      if (error) throw error;
-      alert("Password reset link sent! Please check your email inbox.");
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+  // ⏳ BLOCK UI until auth check finishes
+  if (loading) {
+    return <div style={loader}>Checking session...</div>;
+  }
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h2 style={headerStyle}>
-          {isSignUp ? "Create Account" : "Finance Orbit Login"}
-        </h2>
+    <div style={container}>
+      <form onSubmit={handleLogin} style={card}>
+        <h2>Login</h2>
 
-        <form onSubmit={handleAuth} style={formStyle}>
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={inputStyle}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={inputStyle}
-          />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={input}
+        />
 
-          {/* --- 2. Forgot Password Link (Sirf login mode mein dikhega) --- */}
-          {!isSignUp && (
-            <p onClick={handleForgotPassword} style={forgotPassStyle}>
-              Forgot Password?
-            </p>
-          )}
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={input}
+        />
 
-          <button type="submit" disabled={loading} style={buttonStyle}>
-            {loading ? "Loading..." : isSignUp ? "Register" : "Sign In"}
-          </button>
-        </form>
-
-        <p onClick={() => setIsSignUp(!isSignUp)} style={toggleText}>
-          {isSignUp
-            ? "Already have an account? Login"
-            : "New here? Create an account"}
-        </p>
-      </div>
+        <button style={btn}>Login</button>
+      </form>
     </div>
   );
 }
 
-// --- Styles ---
-const containerStyle = {
+/* styles */
+const loader = {
+  height: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  fontWeight: "bold",
+};
+
+const container = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -112,35 +97,23 @@ const containerStyle = {
   background: "#f1f5f9",
 };
 
-const cardStyle = {
-  padding: "40px",
+const card = {
   background: "#fff",
-  borderRadius: "16px",
-  boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
-  width: "100%",
-  maxWidth: "380px",
-};
-
-const headerStyle = {
-  textAlign: "center",
-  color: "#0f172a",
-  marginBottom: "20px",
-};
-
-const formStyle = {
+  padding: "30px",
+  borderRadius: "12px",
+  width: "320px",
   display: "flex",
   flexDirection: "column",
-  gap: "15px",
+  gap: "14px",
 };
 
-const inputStyle = {
+const input = {
   padding: "12px",
   borderRadius: "8px",
   border: "1px solid #e2e8f0",
-  outline: "none",
 };
 
-const buttonStyle = {
+const btn = {
   padding: "12px",
   borderRadius: "8px",
   border: "none",
@@ -148,22 +121,4 @@ const buttonStyle = {
   color: "#fff",
   fontWeight: "bold",
   cursor: "pointer",
-};
-
-// --- Naya style forgot password ke liye ---
-const forgotPassStyle = {
-  textAlign: "right",
-  fontSize: "12px",
-  color: "#0ea5e9",
-  cursor: "pointer",
-  marginTop: "-10px",
-  fontWeight: "600",
-};
-
-const toggleText = {
-  textAlign: "center",
-  marginTop: "20px",
-  color: "#64748b",
-  cursor: "pointer",
-  fontSize: "14px",
 };
