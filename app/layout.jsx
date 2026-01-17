@@ -10,19 +10,21 @@ export default function RootLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // 1. Yahan wo saare paths likhein jahan Sidebar NAHI dikhana
+  const isPublicPage = pathname === "/login" || pathname === "/reset-password";
+
   useEffect(() => {
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      setSession(session); // Agar session nahi hai aur user login page par nahi hai, to login par bhejo
+      setSession(session);
 
-      if (!session && pathname !== "/login") {
+      // Redirect logic
+      if (!session && !isPublicPage) {
         router.replace("/login");
-      }
-      // 💡 NAYA SUDHAAR: Agar session hai aur user /login par hai, toh home page par bhejo
-      else if (session && pathname === "/login") {
-        router.replace("/"); // '/' aapka main page hai (HomePage.jsx)
+      } else if (session && pathname === "/login") {
+        router.replace("/dashboard");
       } else {
         setLoading(false);
       }
@@ -34,48 +36,43 @@ export default function RootLayout({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      // Session nahi hai aur login par nahi hai, toh login par bhej do
-      if (!session && pathname !== "/login") {
+      if (!session && !isPublicPage) {
         router.replace("/login");
-      }
-      // 💡 NAYA SUDHAAR: Session hai aur login par hai, toh home page par bhej do
-      else if (session && pathname === "/login") {
-        router.replace("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [pathname, router]);
-
-  const isLoginPage = pathname === "/login";
+  }, [pathname, router, isPublicPage]);
 
   return (
     <html lang="en">
-           {" "}
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body style={{ margin: 0, padding: 0, background: "#f8fafc" }}>
-               {" "}
         {loading ? (
-          <div style={loaderStyle}>Verifying Finance Orbit Session...</div>
+          <div style={loaderStyle}>
+            <div style={spinnerStyle}></div>
+          </div>
         ) : (
           <div style={{ display: "flex" }}>
-                        {session && !isLoginPage && <Sidebar />}           {" "}
+            {/* 2. Sidebar sirf tab dikhayen agar session ho AUR public page na ho */}
+            {session && !isPublicPage && <Sidebar />}
+
             <main
               style={{
                 flex: 1,
-                marginLeft: session && !isLoginPage ? "240px" : "0px",
+                // 3. Margin bhi sirf tab apply karein jab sidebar dikh raha ho
+                marginLeft: session && !isPublicPage ? "240px" : "0px",
                 minHeight: "100vh",
               }}
             >
-                            {/* Yeh line theek hai, is mein koi change nahi */} 
-                          {!session && !isLoginPage ? null : children}         
-               {" "}
+              {!session && !isPublicPage ? null : children}
             </main>
-                     {" "}
           </div>
         )}
-             {" "}
       </body>
-         {" "}
     </html>
   );
 }
@@ -85,7 +82,15 @@ const loaderStyle = {
   justifyContent: "center",
   alignItems: "center",
   height: "100vh",
-  fontFamily: "Inter, sans-serif",
-  color: "#0ea5e9",
-  fontWeight: "bold",
+  width: "100vw",
+  background: "#f8fafc",
+};
+
+const spinnerStyle = {
+  width: "48px",
+  height: "48px",
+  border: "4px solid rgba(14, 165, 233, 0.2)",
+  borderTop: "4px solid #0ea5e9",
+  borderRadius: "50%",
+  animation: "spin 0.8s linear infinite",
 };

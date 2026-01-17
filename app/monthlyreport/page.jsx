@@ -1,48 +1,129 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-// 1. Supabase import karein
 import { supabase } from "@/lib/supabase";
+import styles from "./page.module.css";
 
 const MonthlyReport = () => {
   const [clients, setClients] = useState([]);
-  const [sadqaRate, setSadqaRate] = useState(0.1);
-  const [manualMarketing, setManualMarketing] = useState(0);
+  const [marketSpendEntries, setMarketSpendEntries] = useState([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [marketSpendForm, setMarketSpendForm] = useState({
+    month: "",
+    year: new Date().getFullYear().toString(),
+    amount: "",
+  });
 
-  // 2. LocalStorage ki jagah Supabase se data fetch karne ka function
+  const downloadMonthlyCSV = (monthReport) => {
+    // Get all clients for this specific month
+    const monthClients = clients.filter((c) => {
+      if (!c.date) return false;
+      const dateParts = c.date.split("-");
+      const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      const monthYear = dateObj.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+      return monthYear === monthReport.month;
+    });
+
+    // Create CSV content
+    let csvContent = "Monthly Report - " + monthReport.month + "\n\n";
+    
+    // Summary section
+    csvContent += "Summary\n";
+    csvContent += "Total Projects," + monthReport.totalProjects + "\n";
+    csvContent += "Gross Revenue,$" + monthReport.grossRevenue.toFixed(2) + "\n";
+    csvContent += "Production Cost,$" + monthReport.totalProdCost.toFixed(2) + "\n";
+    csvContent += "Market Spend,$" + monthReport.marketSpend.toFixed(2) + "\n";
+    csvContent += "Net Profit,$" + monthReport.netProfit.toFixed(2) + "\n\n";
+    
+    // Project details section
+    if (monthClients.length > 0) {
+      csvContent += "Project Details\n";
+      csvContent += "Client Name,Date,Amount,Production Cost,Net Profit\n";
+      
+      monthClients.forEach((client) => {
+        const clientProfit = (parseFloat(client.amount || 0) - parseFloat(client.productionCost || 0)).toFixed(2);
+        csvContent += `"${client.clientname || 'N/A'}",${client.date},"$${parseFloat(client.amount || 0).toFixed(2)}","$${parseFloat(client.productionCost || 0).toFixed(2)}","$${clientProfit}"\n`;
+      });
+    }
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Monthly_Report_${monthReport.month.replace(" ", "_")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const fetchClientsFromSupabase = async () => {
-    const { data, error } = await supabase
-      .from("clients")
-      .select("*")
-      .order("date", { ascending: false });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    if (error) {
-      console.error("Error fetching data:", error.message);
-    } else {
-      // Supabase columns lowercase hain, isliye mapping zaroori hai
-      const mappedData = data.map((item) => ({
-        ...item,
-        amount: item.amount,
-        productionCost: item.productioncost, // lowercase check karein
-        date: item.date,
-      }));
-      setClients(mappedData);
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching data:", error.message);
+      } else {
+        const mappedData = data.map((item) => ({
+          ...item,
+          amount: item.amount,
+          productionCost: item.productioncost,
+          date: item.date,
+        }));
+        setClients(mappedData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchMarketSpend = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("market_spend")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching market spend:", error.message);
+      } else {
+        setMarketSpendEntries(data || []);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   useEffect(() => {
     fetchClientsFromSupabase();
+    fetchMarketSpend();
   }, []);
 
   const { reports, totals } = useMemo(() => {
     const grouped = {};
-    let overallGross = 0,
-      overallSadqa = 0,
-      overallNet = 0;
+    let overallGross = 0;
+    let overallProdCost = 0;
+    let overallNet = 0;
+    let totalMarketingSpend = 0;
 
+    // Group clients by month
     clients.forEach((c) => {
       if (!c.date) return;
-
-      // Date string ko sahi format mein convert karna (YYYY-MM-DD)
       const dateParts = c.date.split("-");
       const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
@@ -54,9 +135,12 @@ const MonthlyReport = () => {
       if (!grouped[monthYear]) {
         grouped[monthYear] = {
           month: monthYear,
+          monthNum: dateParts[1],
+          year: dateParts[0],
           totalProjects: 0,
           grossRevenue: 0,
           totalProdCost: 0,
+          marketSpend: 0,
         };
       }
       grouped[monthYear].totalProjects += 1;
@@ -64,136 +148,179 @@ const MonthlyReport = () => {
       grouped[monthYear].totalProdCost += parseFloat(c.productionCost || 0);
     });
 
+    // Add market spend to each month
+    marketSpendEntries.forEach((entry) => {
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const monthName = monthNames[parseInt(entry.month) - 1];
+      const monthYear = `${monthName} ${entry.year}`;
+      
+      if (grouped[monthYear]) {
+        grouped[monthYear].marketSpend += parseFloat(entry.amount || 0);
+      } else {
+        // Create entry for month with only market spend
+        grouped[monthYear] = {
+          month: monthYear,
+          monthNum: entry.month,
+          year: entry.year,
+          totalProjects: 0,
+          grossRevenue: 0,
+          totalProdCost: 0,
+          marketSpend: parseFloat(entry.amount || 0),
+        };
+      }
+    });
+
     const reportArray = Object.values(grouped).map((m) => {
-      // Har month ke liye marketing expense minus ho rahi hai
-      const netProfit = Math.max(
-        0,
-        m.grossRevenue - m.totalProdCost - manualMarketing
-      );
-      const sadqaVal = netProfit > 0 ? netProfit * sadqaRate : 0;
+      const netProfit = Math.max(0, m.grossRevenue - m.totalProdCost - m.marketSpend);
 
       overallGross += m.grossRevenue;
-      overallSadqa += sadqaVal;
+      overallProdCost += m.totalProdCost;
+      totalMarketingSpend += m.marketSpend;
       overallNet += netProfit;
 
-      return { ...m, netProfit, sadqa: sadqaVal };
+      return { ...m, netProfit };
     });
 
     return {
-      reports: reportArray,
-      totals: { overallGross, overallNet, overallSadqa },
+      reports: reportArray.sort((a, b) => {
+        // Sort by year and month
+        if (a.year !== b.year) return b.year.localeCompare(a.year);
+        return parseInt(b.monthNum) - parseInt(a.monthNum);
+      }),
+      totals: { 
+        overallGross, 
+        overallProdCost, 
+        totalMarketingSpend, 
+        overallNet
+      },
     };
-  }, [clients, sadqaRate, manualMarketing]);
+  }, [clients, marketSpendEntries]);
 
   return (
-    <div style={pageContainer}>
-      {/* Baaki saara UI same rahega jo aapne pehle diya tha */}
-      <div style={contentWrapper}>
-        <div style={headerFlex}>
-          <h1 style={mainTitle}>
+    <div className={styles.pageContainer}>
+      <div className={styles.contentWrapper}>
+        <div className={styles.headerFlex}>
+          <h1 className={styles.mainTitle}>
             Finance <span style={{ color: "#0ea5e9" }}>Orbit</span>
           </h1>
-          <div style={dateBadge}>2026 Report</div>
+          <div className={styles.dateBadge}>2026 Report</div>
         </div>
 
-        <div style={configSection}>
-          <div style={lightCard}>
-            <label style={configLabel}>Monthly Marketing Expense</label>
-            <div style={inputContainer}>
-              <span style={inputPrefix}>$</span>
-              <input
-                type="number"
-                value={manualMarketing}
-                onChange={(e) =>
-                  setManualMarketing(
-                    Math.max(0, parseFloat(e.target.value) || 0)
-                  )
-                }
-                style={cleanInput}
-                placeholder="0.00"
-              />
-            </div>
+
+        <div className={styles.statsGrid} style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+          <div className={styles.statCard}>
+            <p className={styles.statLabel}>
+              Total Revenue
+              <span className={styles.infoIcon} data-tooltip="This is total revenue coming from all the orders.">
+                i
+              </span>
+            </p>
+            <h2 className={styles.statValueBlue}>${totals.overallGross.toLocaleString()}</h2>
           </div>
-          <div style={lightCard}>
-            <label style={configLabel}>Sadqa Percentage (%)</label>
-            <select
-              value={sadqaRate}
-              onChange={(e) => setSadqaRate(parseFloat(e.target.value))}
-              style={cleanSelect}
+          
+          <div className={styles.statCard}>
+            <p className={styles.statLabel}>
+              Production Cost
+              <span className={styles.infoIcon} data-tooltip="This is the total cost which is paid to the team or employees for the work.">
+                i
+              </span>
+            </p>
+            <h2 style={{ color: "#f43f5e" }} className={styles.statValue}>
+              -${totals.overallProdCost.toLocaleString()}
+            </h2>
+          </div>
+
+          <div className={styles.statCard}>
+            <p className={styles.statLabel}>
+              Marketing Spend
+              <span className={styles.infoIcon} data-tooltip="This is market spend we spend on Upwork, Fiverr, tools, or etc. (like we spend on connects).">
+                i
+              </span>
+            </p>
+            <h2 style={{ color: "#f59e0b" }} className={styles.statValue}>
+              -${totals.totalMarketingSpend.toLocaleString()}
+            </h2>
+          </div>
+
+          <div className={styles.statCard}>
+            <p className={styles.statLabel}>
+              Total Net Profit
+              <span className={styles.infoIcon} data-tooltip="This is the real profit after subtracting production cost and market spend.">
+                i
+              </span>
+            </p>
+            <h2 className={styles.statValueBlack}>${totals.overallNet.toLocaleString()}</h2>
+          </div>
+
+        </div>
+
+        <div className={styles.tableContainer}>
+          <div className={styles.tableHeaderContainer}>
+            <div className={styles.tableHeader}>Monthly Breakdown</div>
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className={styles.addReportButton}
             >
-              <option value={0.1}>10% - Recommended</option>
-              <option value={0.05}>5% - Basic</option>
-            </select>
+              Add Market Spend
+            </button>
           </div>
-        </div>
-
-        <div style={statsGrid}>
-          <div style={statCard}>
-            <p style={statLabel}>Total Revenue</p>
-            <h2 style={statValueBlue}>
-              ${totals.overallGross.toLocaleString()}
-            </h2>
-          </div>
-          <div style={statCard}>
-            <p style={statLabel}>Total Net Profit</p>
-            <h2 style={statValueBlack}>
-              ${totals.overallNet.toLocaleString()}
-            </h2>
-          </div>
-          <div style={statCard}>
-            <p style={statLabel}>Total Sadqa Fund</p>
-            <h2 style={statValueBlue}>
-              ${totals.overallSadqa.toLocaleString()}
-            </h2>
-          </div>
-        </div>
-
-        <div style={tableContainer}>
-          <div style={tableHeader}>Monthly Breakdown</div>
-          <table style={modernTable}>
+          <table className={styles.modernTable}>
             <thead>
               <tr>
-                <th style={thStyle}>Month & Year</th>
-                <th style={thStyle}>Projects</th>
-                <th style={thStyle}>Revenue</th>
-                <th style={thStyle}>Total Cost</th>
-                <th style={thStyle}>Profit</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Sadqa Fund</th>
+                <th className={styles.thStyle}>Month & Year</th>
+                <th className={styles.thStyle}>Projects</th>
+                <th className={styles.thStyle}>Revenue</th>
+                <th className={styles.thStyle}>Production Cost</th>
+                <th className={styles.thStyle}>Market Spend</th>
+                <th className={styles.thStyle} style={{ textAlign: "right" }}>Profit</th>
+                <th className={styles.thStyle} style={{ textAlign: "center" }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {reports.length > 0 ? (
                 reports.map((r, i) => (
-                  <tr key={i} style={trStyle}>
-                    <td style={tdMonth}>{r.month}</td>
-                    <td style={tdStyle}>{r.totalProjects}</td>
-                    <td style={tdStyle}>${r.grossRevenue.toFixed(0)}</td>
-                    <td style={tdStyle}>
-                      ${(r.totalProdCost + manualMarketing).toFixed(0)}
+                  <tr key={i} className={styles.trStyle}>
+                    <td className={styles.tdMonth}>{r.month}</td>
+                    <td className={styles.tdStyle}>{r.totalProjects}</td>
+                    <td className={styles.tdStyle}>${r.grossRevenue.toFixed(0)}</td>
+                    <td className={styles.tdStyle}>${r.totalProdCost.toFixed(0)}</td>
+                    <td className={styles.tdStyle} style={{ color: "#f59e0b", fontWeight: "600" }}>
+                      ${r.marketSpend.toFixed(0)}
                     </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color: "#0f172a",
-                        fontWeight: "800",
-                      }}
-                    >
+                    <td className={styles.tdProfit} style={{ textAlign: "right" }}>
                       ${r.netProfit.toFixed(0)}
                     </td>
-                    <td style={tdSadqa}>${r.sadqa.toFixed(2)}</td>
+                    <td className={styles.tdStyle} style={{ textAlign: "center" }}>
+                      <button
+                        onClick={() => downloadMonthlyCSV(r)}
+                        className={styles.downloadButton}
+                        title="Download CSV"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="6"
-                    style={{
-                      padding: "20px",
-                      textAlign: "center",
-                      color: "#64748b",
-                    }}
-                  >
-                    No data found in Supabase.
+                  <td colSpan="7" style={{ padding: "20px", textAlign: "center", color: "#64748b" }}>
+                    No data found.
                   </td>
                 </tr>
               )}
@@ -201,192 +328,176 @@ const MonthlyReport = () => {
           </table>
         </div>
       </div>
+
+      {/* Side Drawer */}
+      {isDrawerOpen && (
+        <>
+          <div
+            onClick={() => setIsDrawerOpen(false)}
+            className={styles.overlay}
+          />
+          <div className={styles.drawer}>
+            <div className={styles.drawerHeader}>
+              <h3 className={styles.drawerTitle}>Add Market Spend</h3>
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className={styles.closeButton}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Market Spend Entries List */}
+            <div className={styles.entriesList}>
+              <h4 className={styles.formSectionTitle}>Existing Market Spend</h4>
+              {marketSpendEntries.length > 0 ? (
+                <div className={styles.entriesContainer}>
+                  {marketSpendEntries.map((entry, index) => {
+                    const monthNames = [
+                      "January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December"
+                    ];
+                    const monthName = monthNames[parseInt(entry.month) - 1];
+                    return (
+                      <div key={entry.id || index} className={styles.entryItem}>
+                        <div className={styles.entryInfo}>
+                          <span className={styles.entryMonth}>{monthName} {entry.year}</span>
+                          <span className={styles.entryAmount}>${parseFloat(entry.amount || 0).toFixed(0)}</span>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { error } = await supabase
+                              .from("market_spend")
+                              .delete()
+                              .eq("id", entry.id);
+                            if (!error) fetchMarketSpend();
+                          }}
+                          className={styles.deleteEntryButton}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className={styles.noEntries}>No market spend entries yet.</p>
+              )}
+            </div>
+
+            {/* Add New Market Spend Form */}
+            <div className={styles.formSection}>
+              <h4 className={styles.formSectionTitle}>Add New Market Spend</h4>
+              
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Month</label>
+                  <select
+                    value={marketSpendForm.month}
+                    onChange={(e) =>
+                      setMarketSpendForm({ ...marketSpendForm, month: e.target.value })
+                    }
+                    className={styles.cleanSelect}
+                    required
+                  >
+                    <option value="">Select Month</option>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Year</label>
+                  <input
+                    type="number"
+                    value={marketSpendForm.year}
+                    onChange={(e) =>
+                      setMarketSpendForm({ ...marketSpendForm, year: e.target.value })
+                    }
+                    className={styles.cleanInput}
+                    placeholder="2026"
+                    min="2020"
+                    max="2100"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Market Spend Amount ($)</label>
+                <div className={styles.inputContainer}>
+                  <span className={styles.inputPrefix}>$</span>
+                  <input
+                    type="number"
+                    value={marketSpendForm.amount}
+                    onChange={(e) =>
+                      setMarketSpendForm({
+                        ...marketSpendForm,
+                        amount: e.target.value,
+                      })
+                    }
+                    className={styles.cleanInput}
+                    placeholder="0.00"
+                    step="1"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!marketSpendForm.month || !marketSpendForm.year || !marketSpendForm.amount) {
+                    alert("Please fill in all fields");
+                    return;
+                  }
+
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) {
+                    alert("Please login to add market spend");
+                    return;
+                  }
+
+                  const { error } = await supabase.from("market_spend").insert([
+                    {
+                      month: marketSpendForm.month,
+                      year: marketSpendForm.year,
+                      amount: Math.round(parseFloat(marketSpendForm.amount)),
+                      user_id: user.id,
+                    },
+                  ]);
+
+                  if (error) {
+                    alert("Error: " + error.message);
+                  } else {
+                    setMarketSpendForm({
+                      month: "",
+                      year: new Date().getFullYear().toString(),
+                      amount: "",
+                    });
+                    fetchMarketSpend();
+                  }
+                }}
+                className={styles.submitButton}
+              >
+                Add Market Spend
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
-};
-
-// Styles (Aapne jo diye thay wohi same hain...)
-const pageContainer = {
-  padding: "48px 40px",
-  minHeight: "100vh",
-  fontFamily: "'Inter', sans-serif",
-  background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)",
-};
-const contentWrapper = { maxWidth: "1200px", margin: "0 auto" };
-const headerFlex = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: "40px",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: "20px",
-};
-const mainTitle = {
-  fontSize: "42px",
-  fontWeight: "900",
-  color: "#0f172a",
-  margin: 0,
-  letterSpacing: "-1px",
-  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  backgroundClip: "text",
-  lineHeight: "1.2",
-};
-const configSection = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: "24px",
-  marginBottom: "40px",
-};
-const lightCard = {
-  background: "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
-  padding: "28px",
-  borderRadius: "20px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)",
-  transition: "all 0.3s ease",
-};
-const configLabel = {
-  fontSize: "12px",
-  fontWeight: "700",
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: "1px",
-  marginBottom: "12px",
-  display: "block",
-};
-const inputContainer = {
-  display: "flex",
-  alignItems: "center",
-  position: "relative",
-};
-const inputPrefix = {
-  position: "absolute",
-  left: "16px",
-  color: "#0ea5e9",
-  fontWeight: "800",
-  fontSize: "16px",
-  zIndex: 1,
-};
-const cleanInput = {
-  width: "100%",
-  padding: "14px 16px 14px 32px",
-  borderRadius: "12px",
-  border: "2px solid rgba(241, 245, 249, 0.8)",
-  outline: "none",
-  fontSize: "15px",
-  fontWeight: "600",
-  background: "#ffffff",
-  color: "#0f172a",
-  transition: "all 0.2s ease",
-};
-const cleanSelect = { ...cleanInput, padding: "14px 16px", cursor: "pointer" };
-const statsGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: "24px",
-  marginBottom: "40px",
-};
-const statCard = {
-  background: "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
-  padding: "32px 28px",
-  borderRadius: "20px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)",
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  position: "relative",
-  overflow: "hidden",
-};
-const statLabel = {
-  color: "#64748b",
-  fontSize: "12px",
-  fontWeight: "700",
-  textTransform: "uppercase",
-  letterSpacing: "1px",
-  marginBottom: "12px",
-  display: "block",
-};
-const statValueBlue = {
-  fontSize: "36px",
-  fontWeight: "900",
-  margin: 0,
-  background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  backgroundClip: "text",
-  letterSpacing: "-1px",
-  lineHeight: "1.1",
-};
-const statValueBlack = {
-  fontSize: "36px",
-  fontWeight: "900",
-  margin: 0,
-  color: "#0f172a",
-  letterSpacing: "-1px",
-  lineHeight: "1.1",
-};
-const tableContainer = {
-  background: "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
-  borderRadius: "24px",
-  padding: "32px",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)",
-};
-const tableHeader = {
-  fontSize: "22px",
-  fontWeight: "800",
-  marginBottom: "24px",
-  color: "#0f172a",
-  letterSpacing: "-0.5px",
-};
-const modernTable = { width: "100%", borderCollapse: "collapse" };
-const thStyle = {
-  padding: "18px 16px",
-  textAlign: "left",
-  fontSize: "11px",
-  color: "#64748b",
-  textTransform: "uppercase",
-  fontWeight: "800",
-  letterSpacing: "1px",
-  borderBottom: "2px solid rgba(241, 245, 249, 0.8)",
-  background: "rgba(248, 250, 252, 0.5)",
-};
-const trStyle = {
-  borderBottom: "1px solid rgba(241, 245, 249, 0.6)",
-  transition: "all 0.2s ease",
-};
-const tdStyle = {
-  padding: "18px 16px",
-  fontSize: "14px",
-  color: "#475569",
-  fontWeight: "500",
-};
-const tdMonth = {
-  ...tdStyle,
-  fontWeight: "700",
-  color: "#0f172a",
-  fontSize: "15px",
-};
-const tdSadqa = {
-  ...tdStyle,
-  textAlign: "right",
-  background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  backgroundClip: "text",
-  fontWeight: "800",
-  fontSize: "15px",
-};
-const dateBadge = {
-  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-  color: "white",
-  padding: "10px 20px",
-  borderRadius: "12px",
-  fontSize: "14px",
-  fontWeight: "700",
-  boxShadow: "0 4px 16px rgba(15, 23, 42, 0.3)",
-  letterSpacing: "-0.3px",
 };
 
 export default MonthlyReport;

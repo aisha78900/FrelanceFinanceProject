@@ -1,0 +1,116 @@
+.sidebarContainer {
+  width: 240px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  z-index: 1000;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
+}
+
+.logoSection {
+  padding: 32px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(14, 165, 233, 0.02) 100%);
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  transition: all 0.3s ease;
+}
+
+.logoText {
+  font-size: 22px;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.8px;
+}
+
+.navStyle {
+  padding: 24px 12px;
+  flex: 1;
+}
+
+.linkStyle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.linkStyleActive {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
+  color: #0ea5e9;
+  font-weight: 700;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15), inset 0 0 0 1px rgba(14, 165, 233, 0.1);
+}
+
+.linkStyleInactive {
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.linkStyleInactive:hover {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+  transform: translateX(4px);
+}
+
+.iconActive {
+  color: #0ea5e9;
+  transition: all 0.3s ease;
+  transform: scale(1.1);
+}
+
+.iconInactive {
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.linkText {
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.footerSection {
+  padding: 24px 20px;
+  text-align: center;
+  border-top: 1px solid rgba(241, 245, 249, 0.8);
+  background: rgba(248, 250, 252, 0.5);
+}
+
+.footerText {
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
