@@ -574,3 +574,246 @@
   padding: 20px;
   font-style: italic;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 24px 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .drawer {
+    width: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 80px 20px 24px;
+  }
+
+  .headerFlex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .mainTitle {
+    font-size: 28px;
+  }
+
+  .dateBadge {
+    align-self: flex-start;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .statCard {
+    padding: 24px 20px;
+  }
+
+  .statValueBlue,
+  .statValueBlack,
+  .statValue {
+    font-size: 28px;
+  }
+
+  .tableContainer {
+    padding: 20px 16px;
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+
+  .tableHeaderContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .tableHeader {
+    font-size: 18px;
+  }
+
+  .addReportButton {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .modernTable {
+    min-width: 800px;
+  }
+
+  .thStyle {
+    padding: 14px 12px;
+    font-size: 10px;
+  }
+
+  .tdStyle,
+  .tdMonth,
+  .tdProfit {
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+
+  .downloadButton {
+    padding: 6px 10px;
+  }
+
+  .downloadButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .drawer {
+    width: 100%;
+    max-width: 100%;
+    padding: 28px 20px;
+    overflow-y: auto;
+  }
+
+  .drawerTitle {
+    font-size: 20px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 72px 16px 20px;
+  }
+
+  .mainTitle {
+    font-size: 24px;
+  }
+
+  .dateBadge {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .statCard {
+    padding: 20px 16px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+
+  .statValueBlue,
+  .statValueBlack,
+  .statValue {
+    font-size: 24px;
+  }
+
+  .infoIcon::before {
+    max-width: 200px;
+    min-width: 150px;
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+
+  .tableContainer {
+    padding: 16px 12px;
+  }
+
+  .tableHeader {
+    font-size: 16px;
+  }
+
+  .addReportButton {
+    font-size: 13px;
+    padding: 12px 20px;
+    min-height: 44px;
+  }
+
+  .modernTable {
+    min-width: 700px;
+  }
+
+  .thStyle {
+    padding: 12px 8px;
+    font-size: 9px;
+  }
+
+  .tdStyle,
+  .tdMonth,
+  .tdProfit {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+
+  .downloadButton {
+    padding: 6px 8px;
+  }
+
+  .downloadButton svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .drawer {
+    padding: 20px 16px;
+  }
+
+  .drawerTitle {
+    font-size: 18px;
+  }
+
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    font-size: 28px;
+  }
+
+  .formSectionTitle {
+    font-size: 15px;
+  }
+
+  .formLabel {
+    font-size: 12px;
+  }
+
+  .cleanInput,
+  .cleanSelect {
+    padding: 14px 16px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .submitButton {
+    padding: 14px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .entryItem {
+    padding: 12px;
+  }
+
+  .entryMonth {
+    font-size: 13px;
+  }
+
+  .entryAmount {
+    font-size: 15px;
+  }
+
+  .deleteEntryButton {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

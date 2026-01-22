@@ -422,3 +422,289 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 32px 24px;
+  }
+
+  .drawer {
+    width: 400px;
+  }
+  
+  .tableContainer {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 80px 20px 24px;
+  }
+
+  .headerFlex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .mainTitle {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .subTitle {
+    font-size: 14px;
+  }
+
+  .btnPrimary {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .tableContainer {
+    padding: 20px 16px;
+    border-radius: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  .tableContainer::after {
+    content: '← Scroll →';
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 10px;
+    color: #94a3b8;
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  .tableHeader {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .modernTable {
+    min-width: 900px;
+  }
+
+  .thStyle {
+    padding: 14px 12px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .tdStyle,
+  .tdClientName {
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+
+  .platformBadge {
+    font-size: 11px;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+
+  .amountCell,
+  .costCell {
+    padding: 14px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 36px;
+    white-space: nowrap;
+  }
+
+  .drawer {
+    width: 100%;
+    max-width: 100%;
+    padding: 28px 20px;
+    overflow-y: auto;
+  }
+
+  .drawerTitle {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .cleanInput,
+  .cleanSelect {
+    padding: 14px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    min-height: 48px;
+  }
+
+  .labelStyle {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .btnSubmit,
+  .btnCancel {
+    padding: 14px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .addRowOrderBtn {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .innerTh {
+    padding: 12px;
+    font-size: 10px;
+  }
+
+  .innerTd,
+  .innerTdAmount {
+    padding: 12px;
+    font-size: 12px;
+  }
+  
+  .actionButtons {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 72px 16px 20px;
+  }
+  
+  .headerFlex {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .mainTitle {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .subTitle {
+    font-size: 13px;
+  }
+  
+  .btnPrimary {
+    padding: 12px 20px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  .tableContainer {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+  
+  .tableContainer::after {
+    font-size: 9px;
+    bottom: 10px;
+    right: 12px;
+    padding: 3px 6px;
+  }
+
+  .tableHeader {
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+
+  .modernTable {
+    min-width: 800px;
+  }
+
+  .thStyle {
+    padding: 12px 10px;
+    font-size: 9px;
+  }
+
+  .tdStyle,
+  .tdClientName {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .platformBadge {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .amountCell,
+  .costCell {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    padding: 6px 12px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .drawer {
+    padding: 24px 16px;
+  }
+
+  .drawerTitle {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .cleanInput,
+  .cleanSelect {
+    padding: 12px 14px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  
+  .labelStyle {
+    font-size: 12px;
+  }
+
+  .btnSubmit,
+  .btnCancel {
+    padding: 12px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  .addRowOrderBtn {
+    padding: 8px 14px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+
+  .innerTh {
+    padding: 10px;
+    font-size: 9px;
+  }
+
+  .innerTd,
+  .innerTdAmount {
+    padding: 10px;
+    font-size: 11px;
+  }
+}

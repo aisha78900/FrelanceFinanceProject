@@ -287,3 +287,246 @@
     transform: translateY(0);
   }
 }
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 32px 24px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .mainTitle {
+    font-size: 28px;
+  }
+  
+  .statCard {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 80px 20px 24px;
+  }
+
+  .headerSection {
+    margin-bottom: 28px;
+  }
+
+  .mainTitle {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .subTitle {
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .statCard {
+    padding: 24px 20px;
+    border-radius: 16px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .statCard:active {
+    transform: scale(0.98);
+  }
+
+  .statValue,
+  .statValueBlack {
+    font-size: 32px;
+    margin: 8px 0;
+  }
+
+  .statLabel {
+    font-size: 11px;
+    letter-spacing: 0.6px;
+  }
+  
+  .cardFooter {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .activityCard {
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+
+  .cardTitle {
+    font-size: 18px;
+  }
+  
+  .headerFlex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .viewAllBadge {
+    align-self: flex-start;
+  }
+
+  .activityRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  
+  .activityRowContent {
+    width: 100%;
+  }
+
+  .clientName,
+  .clientNameText {
+    font-size: 15px;
+  }
+  
+  .dateText {
+    font-size: 12px;
+  }
+
+  .amount,
+  .amountValue {
+    font-size: 18px;
+  }
+  
+  .costText {
+    font-size: 11px;
+  }
+
+  .emptyState {
+    padding: 60px 20px;
+    min-height: 240px;
+  }
+
+  .emptyStateMessage {
+    font-size: 15px;
+  }
+  
+  .emptyStateButton {
+    padding: 14px 28px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 72px 16px 20px;
+  }
+
+  .headerSection {
+    margin-bottom: 24px;
+  }
+
+  .mainTitle {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .subTitle {
+    font-size: 13px;
+  }
+
+  .statsGrid {
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .statCard {
+    padding: 20px 18px;
+    min-height: 110px;
+    border-radius: 14px;
+  }
+
+  .statValue,
+  .statValueBlack {
+    font-size: 28px;
+    margin: 6px 0;
+  }
+
+  .statLabel {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  
+  .cardFooter {
+    font-size: 10px;
+  }
+
+  .activityCard {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .cardTitle {
+    font-size: 17px;
+  }
+  
+  .viewAllBadge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .activityRow {
+    padding: 14px 0;
+    gap: 10px;
+  }
+  
+  .avatarCircle {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .clientName,
+  .clientNameText {
+    font-size: 14px;
+  }
+
+  .clientDate,
+  .dateText {
+    font-size: 11px;
+  }
+
+  .amount,
+  .amountValue {
+    font-size: 16px;
+  }
+  
+  .costText {
+    font-size: 10px;
+  }
+  
+  .emptyState {
+    padding: 50px 16px;
+    min-height: 220px;
+  }
+  
+  .emptyStateMessage {
+    font-size: 14px;
+  }
+
+  .emptyStateButton {
+    padding: 12px 24px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
@@ -11,14 +11,32 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        router.push("/");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
+        });
         if (error) throw error;
-        alert("Signup successful! Please check your email.");
+        alert("Check your email for the verification link!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -35,15 +53,14 @@ export default function AuthPage() {
   };
 
   const handleForgotPassword = async () => {
-    if (!email) return alert("Pehle email address likhein.");
+    if (!email) return alert("Please enter your email first.");
     setLoading(true);
     try {
-      // Is link ko aapne Supabase dashboard mein bhi register karna hai
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      alert("Password reset link aapki email par bhej diya gaya hai!");
+      alert("Password reset link sent to your email!");
     } catch (error) {
       alert(error.message);
     } finally {

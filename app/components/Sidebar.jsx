@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -8,10 +8,13 @@ import {
   UsersIcon,
   ChartBarIcon,
   ArrowLeftOnRectangleIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -49,18 +52,68 @@ const Sidebar = () => {
   ];
 
   return (
-    <div style={sidebarStyle}>
-      <div style={{ padding: "30px 20px" }}>
-        <h2 style={{ 
-          fontSize: "22px", 
-          fontWeight: "700",
-          fontFamily: "'Montserrat', sans-serif",
-          letterSpacing: "-0.5px",
-          margin: 0
-        }}>
-          Finance<span style={{ color: "#0ea5e9" }}>Orbit</span>
-        </h2>
-      </div>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="Toggle menu"
+        aria-expanded={isMobileMenuOpen}
+        style={{
+          position: "fixed",
+          top: "16px",
+          left: "16px",
+          zIndex: 2000,
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "12px",
+          padding: "12px",
+          cursor: "pointer",
+          display: "none",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+          minWidth: "48px",
+          minHeight: "48px",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        className="mobile-menu-btn"
+      >
+        {isMobileMenuOpen ? (
+          <XMarkIcon style={{ width: 24, height: 24, color: "#0f172a" }} />
+        ) : (
+          <Bars3Icon style={{ width: 24, height: 24, color: "#0f172a" }} />
+        )}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 1998,
+            display: "none",
+          }}
+          className="mobile-overlay"
+        />
+      )}
+
+      <div style={sidebarStyle} className={`sidebar-container ${isMobileMenuOpen ? "sidebar-open" : ""}`}>
+        <div style={{ padding: "30px 20px" }}>
+          <h2 style={{ 
+            fontSize: "22px", 
+            fontWeight: "700",
+            fontFamily: "'Montserrat', sans-serif",
+            letterSpacing: "-0.5px",
+            margin: 0
+          }}>
+            Finance<span style={{ color: "#0ea5e9" }}>Orbit</span>
+          </h2>
+        </div>
       <nav style={{ flex: 1, padding: "0 10px" }}>
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
@@ -68,23 +121,25 @@ const Sidebar = () => {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: "12px 14px",
+                gap: "12px",
+                padding: "14px 16px",
                 textDecoration: "none",
-                borderRadius: "10px",
-                marginBottom: "6px",
+                borderRadius: "12px",
+                marginBottom: "8px",
                 color: isActive ? "#0ea5e9" : "#64748b",
                 background: isActive 
                   ? "linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%)" 
                   : "transparent",
                 fontFamily: "'Poppins', sans-serif",
-                fontSize: "14px",
+                fontSize: "15px",
                 fontWeight: isActive ? "600" : "500",
-                transition: "all 0.2s ease",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 border: isActive ? "1px solid rgba(14, 165, 233, 0.2)" : "1px solid transparent",
+                minHeight: "48px",
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
@@ -117,7 +172,52 @@ const Sidebar = () => {
           <ArrowLeftOnRectangleIcon style={{ width: 18 }} /> Logout
         </button>
       </div>
-    </div>
+      </div>
+
+      <style jsx global>{`
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        
+        @media (max-width: 768px) {
+          .mobile-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          .mobile-menu-btn:active {
+            transform: scale(0.95);
+          }
+          
+          .mobile-overlay {
+            display: block !important;
+            animation: fadeIn 0.3s ease;
+          }
+          
+          .sidebar-container {
+            transform: translateX(-100%);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+          }
+          
+          .sidebar-container.sidebar-open {
+            transform: translateX(0);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
   );
 };
 
@@ -132,6 +232,8 @@ const sidebarStyle = {
   display: "flex",
   flexDirection: "column",
   fontFamily: "'Poppins', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif",
+  zIndex: 1999,
+  transition: "transform 0.3s ease",
 };
 const logoutButtonStyle = {
   width: "100%",

@@ -12,9 +12,17 @@ export default function ClientLayout({ children }) {
           minHeight: "100vh",
           position: "relative",
         }}
+        className="main-content"
       >
         {children}
       </main>
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .main-content {
+            margin-left: 0 !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
