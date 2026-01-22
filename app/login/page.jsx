@@ -15,11 +15,13 @@ export default function AuthPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      // Recovery mode mein redirect nahi karna
       if (event === "SIGNED_IN" && session) {
-        router.push("/");
+        if (!window.location.hash.includes("type=recovery")) {
+          router.push("/");
+        }
       }
     });
-
     return () => subscription.unsubscribe();
   }, [router]);
 
@@ -31,12 +33,10 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
+          options: { emailRedirectTo: `${window.location.origin}/login` },
         });
         if (error) throw error;
-        alert("Check your email for the verification link!");
+        alert("Verification link sent! Please check your email.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -57,6 +57,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        // Ye line user ko aapke vercel link par bhejegi
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
@@ -92,7 +93,11 @@ export default function AuthPage() {
             className={styles.input}
           />
           {!isSignUp && (
-            <p onClick={handleForgotPassword} className={styles.forgotPass}>
+            <p
+              onClick={handleForgotPassword}
+              className={styles.forgotPass}
+              style={{ cursor: "pointer", color: "blue" }}
+            >
               Forgot Password?
             </p>
           )}
@@ -100,7 +105,11 @@ export default function AuthPage() {
             {loading ? "Processing..." : isSignUp ? "Register" : "Sign In"}
           </button>
         </form>
-        <p onClick={() => setIsSignUp(!isSignUp)} className={styles.toggleText}>
+        <p
+          onClick={() => setIsSignUp(!isSignUp)}
+          className={styles.toggleText}
+          style={{ cursor: "pointer" }}
+        >
           {isSignUp
             ? "Already have an account? Login"
             : "New here? Create account"}

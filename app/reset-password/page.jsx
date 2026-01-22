@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "../login/page.module.css";
@@ -20,10 +20,11 @@ export default function ResetPasswordPage() {
 
       if (error) throw error;
 
-      alert("Success! Password update ho gaya hai.");
+      alert("Success! Password update ho gaya hai. Ab login karein.");
+      await supabase.auth.signOut();
       router.push("/login");
     } catch (error) {
-      alert(error.message);
+      alert("Error: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,6 @@ export default function ResetPasswordPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <h2 className={styles.header}>Finance Orbit Reset</h2>
-
         <form onSubmit={handleUpdatePassword} className={styles.form}>
           <div
             style={{
@@ -45,7 +45,6 @@ export default function ResetPasswordPage() {
           >
             Enter your new password to secure your account.
           </div>
-
           <input
             type="password"
             placeholder="New Password"
@@ -55,15 +54,10 @@ export default function ResetPasswordPage() {
             className={styles.input}
             minLength={6}
           />
-
           <button type="submit" disabled={loading} className={styles.button}>
             {loading ? "Updating..." : "Update Password"}
           </button>
         </form>
-
-        <p onClick={() => router.push("/login")} className={styles.toggleText}>
-          Back to Login
-        </p>
       </div>
     </div>
   );
