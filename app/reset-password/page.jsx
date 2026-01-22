@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
 
       if (error) throw error;
 
-      alert("Success! Password update ho gaya hai. Ab login karein.");
+      alert("Success! Password is updated.");
       await supabase.auth.signOut();
       router.push("/login");
     } catch (error) {
